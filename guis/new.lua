@@ -1,4 +1,4 @@
-﻿local vape = {
+local vape = {
 	ActiveBinds = {},
 	Categories = {},
 	GUIColor = {
