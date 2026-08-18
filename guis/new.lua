@@ -2490,7 +2490,7 @@ components = {
 			holder.BorderSizePixel = 0
 			holder.FontFace = uipallet.Font
 			holder.Size = UDim2.new(1, 0, 0, 40)
-			holder.Text = '窶岩岩岩岩岩岩岩岩岩・..props.Name
+			holder.Text = '          '..props.Name
 			holder.TextColor3 = color.Dark(uipallet.Text, 0.16)
 			holder.TextSize = 14
 			holder.TextXAlignment = Enum.TextXAlignment.Left
@@ -2934,7 +2934,7 @@ components = {
 		
 			for _, module in vape.Modules do
 				module.Object.Visible = module.Visible
-				module.Object.Text = string.rep('窶・, 12)..module.Name
+				module.Object.Text = string.rep(' ', 12)..module.Name
 				module.Edit.Visible = false
 			end
 		end)
@@ -2959,7 +2959,7 @@ components = {
 		
 			for _, module in vape.Modules do
 				module.Object.Visible = true
-				module.Object.Text = string.rep('窶・, 50)..module.Name
+				module.Object.Text = string.rep(' ', 50)..module.Name
 				module.Edit.Visible = true
 			end
 		end)
@@ -4058,7 +4058,7 @@ components = {
 			local label = Instance.new('TextLabel')
 			label.Size = UDim2.fromOffset(218, 27)
 			label.BackgroundTransparency = 1
-			label.Text = '窶岩岩岩岩岩岩岩岩岩・..props.Text:upper()
+			label.Text = '          '..props.Text:upper()
 			label.TextXAlignment = Enum.TextXAlignment.Left
 			label.TextColor3 = color.Dark(uipallet.Text, 0.43)
 			label.TextSize = 9
@@ -4103,7 +4103,7 @@ components = {
 		title.BackgroundTransparency = 1
 		title.FontFace = uipallet.Font
 		title.Size = UDim2.new(1, 0, 0, 29)
-		title.Text = '窶岩岩岩岩岩岩岩岩・..props.Name..' - '..component.Value
+		title.Text = '         '..props.Name..' - '..component.Value
 		title.TextColor3 = color.Dark(uipallet.Text, 0.16)
 		title.TextSize = 13
 		title.TextTruncate = Enum.TextTruncate.AtEnd
@@ -4142,7 +4142,7 @@ components = {
 		
 		function component:SetValue(value, isClick)
 			self.Value = table.find(props.List, value) and value or props.List[1] or 'None'
-			title.Text = '窶岩岩岩岩岩岩岩岩・..props.Name..' - '..self.Value
+			title.Text = '         '..props.Name..' - '..self.Value
 		
 			if dropdownchildren then
 				arrow.Rotation = 90
@@ -4174,7 +4174,7 @@ components = {
 					entry.FontFace = uipallet.Font
 					entry.Position = UDim2.fromOffset(0, index * 26)
 					entry.Size = UDim2.new(1, 0, 0, 26)
-					entry.Text = '窶岩岩岩岩岩岩岩岩・..v
+					entry.Text = '         '..v
 					entry.TextColor3 = color.Dark(uipallet.Text, 0.16)
 					entry.TextSize = 13
 					entry.TextTruncate = Enum.TextTruncate.AtEnd
@@ -4454,7 +4454,7 @@ components = {
 			window.Size = UDim2.fromOffset(220, 42 + windowlist.AbsoluteContentSize.Y / scale.Scale)
 			for _, button in component.Buttons do
 				if button.Icon then
-					button.Object.Text = string.rep('窶・, 39 * scale.Scale)..button.Name
+					button.Object.Text = string.rep(' ', 39 * scale.Scale)..button.Name
 				end
 			end
 		end)
@@ -4477,7 +4477,7 @@ components = {
 		button.FontFace = uipallet.Font
 		button.Name = props.Name
 		button.Size = UDim2.fromOffset(220, 40)
-		button.Text = (props.Icon and string.rep('窶・, 39) or props.Window and string.rep('窶・, 17) or string.rep('窶・, 10))..props.Name
+		button.Text = (props.Icon and string.rep(' ', 39) or props.Window and string.rep(' ', 17) or string.rep(' ', 10))..props.Name
 		button.TextColor3 = color.Dark(uipallet.Text, 0.16)
 		button.TextSize = 14
 		button.TextXAlignment = Enum.TextXAlignment.Left
@@ -5062,7 +5062,7 @@ components = {
 		toggle.BorderSizePixel = 0
 		toggle.FontFace = uipallet.Font
 		toggle.Size = UDim2.new(1, 0, 0, 40)
-		toggle.Text = string.rep('窶・, 33 * scale.Scale)..props.Name
+		toggle.Text = string.rep(' ', 33 * scale.Scale)..props.Name
 		toggle.TextColor3 = color.Dark(uipallet.Text, 0.16)
 		toggle.TextSize = 14
 		toggle.TextXAlignment = Enum.TextXAlignment.Left
@@ -5115,7 +5115,7 @@ components = {
 		end
 		
 		scale:GetPropertyChangedSignal('Scale'):Connect(function()
-			toggle.Text = string.rep('窶・, 33 * scale.Scale)..props.Name
+			toggle.Text = string.rep(' ', 33 * scale.Scale)..props.Name
 		end)
 		
 		toggle.MouseEnter:Connect(function()
@@ -5631,7 +5631,7 @@ components = {
 		button.FontFace = uipallet.Font
 		button.Name = props.Name
 		button.Size = UDim2.fromOffset(220, 40)
-		button.Text = string.rep('窶・, 12)..props.Name
+		button.Text = string.rep(' ', 12)..props.Name
 		button.TextColor3 = color.Dark(uipallet.Text, 0.16)
 		button.TextSize = 14
 		button.TextXAlignment = Enum.TextXAlignment.Left
@@ -7610,7 +7610,7 @@ components = {
 		toggle.BorderSizePixel = 0
 		toggle.FontFace = uipallet.Font
 		toggle.Size = UDim2.new(1, 0, 0, 30)
-		toggle.Text = '窶岩岩岩岩岩岩岩岩岩・..props.Name
+		toggle.Text = '          '..props.Name
 		toggle.TextColor3 = color.Dark(uipallet.Text, 0.16)
 		toggle.TextSize = 14
 		toggle.TextXAlignment = Enum.TextXAlignment.Left
