@@ -41,7 +41,6 @@ local inputService = cloneref(game:GetService('UserInputService'))
 local tweenService = cloneref(game:GetService('TweenService'))
 local lightingService = cloneref(game:GetService('Lighting'))
 local marketplaceService = cloneref(game:GetService('MarketplaceService'))
-local proxService = cloneref(game:GetService('ProximityPromptService'))
 local teleportService = cloneref(game:GetService('TeleportService'))
 local httpService = cloneref(game:GetService('HttpService'))
 local guiService = cloneref(game:GetService('GuiService'))
@@ -49,19 +48,19 @@ local groupService = cloneref(game:GetService('GroupService'))
 local textChatService = cloneref(game:GetService('TextChatService'))
 local contextService = cloneref(game:GetService('ContextActionService'))
 local coreGui = cloneref(game:GetService('CoreGui'))
-local stats = cloneref(game:GetService('Stats'))
 
 local isnetworkowner = identifyexecutor and table.find({'AWP', 'Nihon'}, ({identifyexecutor()})[1]) and isnetworkowner or function()
 	return true
 end
 local gameCamera = workspace.CurrentCamera or workspace:FindFirstChildWhichIsA('Camera')
 local lplr = playersService.LocalPlayer
+local assetfunction = getcustomasset
 
 local vape = shared.vape
 local tween = vape.Libraries.tween
 local targetinfo = vape.Libraries.targetinfo
-local getfontbounds = vape.Libraries.getfontbounds
-local getvapeasset = vape.Libraries.getvapeasset
+local getfontsize = vape.Libraries.getfontsize
+local getcustomasset = vape.Libraries.getcustomasset
 
 local TargetStrafeVector, SpiderShift, WaypointFolder
 local Spider = {Enabled = false}
@@ -73,7 +72,7 @@ local function addBlur(parent)
 	blur.Size = UDim2.new(1, 89, 1, 52)
 	blur.Position = UDim2.fromOffset(-48, -31)
 	blur.BackgroundTransparency = 1
-	blur.Image = getvapeasset('newvape/assets/new/blur.png')
+	blur.Image = getcustomasset('newvape/assets/new/blur.png')
 	blur.ScaleType = Enum.ScaleType.Slice
 	blur.SliceCenter = Rect.new(52, 31, 261, 502)
 	blur.Parent = parent
@@ -359,7 +358,7 @@ run(function()
 		if ent.NPC then return true end
 		if isFriend(ent.Player) then return false end
 		if not select(2, whitelist:get(ent.Player)) then return false end
-		if vape.Settings.Modules.Options['Teams by server'].Enabled then
+		if vape.Categories.Main.Options['Teams by server'].Enabled then
 			if not lplr.Team then return true end
 			if not ent.Player.Team then return true end
 			if ent.Player.Team ~= lplr.Team then return true end
@@ -370,7 +369,7 @@ run(function()
 
 	entitylib.getEntityColor = function(ent)
 		ent = ent.Player
-		if not (ent and vape.Settings.Modules.Options['Use team color'].Enabled) then return end
+		if not (ent and vape.Categories.Main.Options['Use team color'].Enabled) then return end
 		if isFriend(ent, true) then
 			return Color3.fromHSV(vape.Categories.Friends.Options['Friends color'].Hue, vape.Categories.Friends.Options['Friends color'].Sat, vape.Categories.Friends.Options['Friends color'].Value)
 		end
@@ -526,21 +525,10 @@ run(function()
 			if getcallbackvalue and restorefunction and hookfunction then
 				local old
 				task.spawn(function()
-					vape:Clean(function()
-						if old then
-							restorefunction(old)
-							old = nil
-						end
-					end)
-
 					repeat
 						local current = getcallbackvalue(textChatService, 'OnIncomingMessage')
 
-						if old ~= current and current then
-							if old then
-								restorefunction(old)
-							end
-
+						if old ~= current then
 							local hook
 							hook = hookfunction(current, function(...)
 								local msg = ...
@@ -565,6 +553,10 @@ run(function()
 
 						task.wait(0.1)
 					until vape.Loaded == nil
+
+					if old then
+						restorefunction(old)
+					end
 				end)
 			end
 		elseif replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents') then
@@ -647,7 +639,7 @@ run(function()
 		if success then
 			return sendToast({
 				toastTitle = text,
-				iconImage = getvapeasset('newvape/assets/new/vape.png'),
+				iconImage = getcustomasset('newvape/assets/new/vape.png'),
 				swipeUpDismiss = true,
 				onActivated = function() end
 			})
@@ -718,10 +710,10 @@ run(function()
 		iconframe.Parent = mainframe
 		local icon = Instance.new('ImageLabel')
 		icon.Size = UDim2.fromOffset(36, 36)
-		icon.Image = getvapeasset('newvape/assets/new/vape.png')
+		icon.Image = getcustomasset('newvape/assets/new/vape.png')
 		icon.BackgroundTransparency = 1
 		icon.Parent = iconframe
-		constraint.MaxSize = Vector2.new(math.max(getfontbounds(text, 20, textlabel.FontFace).X + 80, 600), math.huge)
+		constraint.MaxSize = Vector2.new(math.max(getfontsize(text, 20, textlabel.FontFace).X + 80, 600), math.huge)
 
 		tween:Tween(container, TweenInfo.new(0.3), {
 			Position = UDim2.new(0.5, 0, 0, 20)
@@ -1723,7 +1715,7 @@ run(function()
 		Function = function(callback)
 			if callback then
 				if Method.Value == 'Part' then
-					local debounce = os.clock()
+					local debounce = tick()
 					part = Instance.new('Part')
 					part.Size = Vector3.new(10000, 1, 10000)
 					part.Transparency = 1 - Color.Opacity
@@ -1736,10 +1728,9 @@ run(function()
 	
 					AntiFall:Clean(part)
 					AntiFall:Clean(part.Touched:Connect(function(touchedpart)
-						if touchedpart.Parent == lplr.Character and entitylib.isAlive and debounce < os.clock() then
+						if touchedpart.Parent == lplr.Character and entitylib.isAlive and debounce < tick() then
 							local root = entitylib.character.RootPart
-							debounce = os.clock() + 0.1
-	
+							debounce = tick() + 0.1
 							if Mode.Value == 'Velocity' then
 								root.AssemblyLinearVelocity = Vector3.new(root.AssemblyLinearVelocity.X, 100, root.AssemblyLinearVelocity.Z)
 							elseif Mode.Value == 'Impulse' then
@@ -1832,6 +1823,37 @@ run(function()
 				part.Transparency = 1 - o
 			end
 		end
+	})
+end)
+
+run(function()
+	local Desync
+	local hook
+	
+	Desync = vape.Categories.Blatant:CreateModule({
+		Name = 'Desync',
+		Function = function(callback)
+			if callback then
+				if not rakNetCheck('Desync') then
+					Desync:Toggle()
+					return
+				end
+	
+				hook = function(packet)
+					if packet.AsArray[1] == 0x1b then
+						local data = packet.AsBuffer
+						buffer.writeu32(data, 1, 0xFFFFFFFF)
+						packet:SetData(data)
+					end
+				end
+	
+				raknet.add_send_hook(hook)
+			elseif hook then
+				raknet.remove_send_hook(hook)
+				hook = nil
+			end
+		end,
+		Tooltip = 'Prevent the server from replicating your current position to other players.'
 	})
 end)
 
@@ -3303,7 +3325,7 @@ run(function()
 				Truss.Parent = Spider.Enabled and gameCamera or nil
 			end
 		end,
-		Tooltip = 'Velocity - Uses smooth movement to boost you upward\nImpulse - Same as velocity while using forces instead\nCFrame - Directly adjusts the position upward\nPart - Positions a climbable part infront of you'
+		Tooltip = 'Velocity - Uses smooth movement to boost you upward\nCFrame - Directly adjusts the position upward\nPart - Positions a climbable part infront of you'
 	})
 	Value = Spider:CreateSlider({
 		Name = 'Speed',
@@ -3372,8 +3394,7 @@ run(function()
 				AngularVelocity = nil
 			end
 			AngularVelocity = val == 'BodyMover' and Instance.new('BodyAngularVelocity') or nil
-		end,
-		Tooltip = 'CFrame - Directly adjusts your characters angle\nRotVelocity - Sets the rotation velocity so that you spin\nBodyMover - Uses body movers to edit your rotation velocity'
+		end
 	})
 	Value = SpinBot:CreateSlider({
 		Name = 'Speed',
@@ -4551,7 +4572,6 @@ run(function()
 				if vape.ThreadFix then
 					setthreadidentity(8)
 				end
-	
 				chair = Instance.new('MeshPart')
 				chair.Color = Color3.fromRGB(21, 21, 21)
 				chair.Size = Vector3.new(2.16, 3.6, 2.3) / Vector3.new(12.37, 20.636, 13.071)
@@ -4611,7 +4631,6 @@ run(function()
 				chairfan.CanCollide = false
 				chairfan.Parent = chair
 				local trails = {}
-	
 				for _, v in wheelpositions do
 					local attachment = Instance.new('Attachment')
 					attachment.Position = v
@@ -4632,14 +4651,12 @@ run(function()
 					trail.Parent = chairlegs
 					table.insert(trails, trail)
 				end
-	
 				GamingChair:Clean(chair)
 				GamingChair:Clean(movingsound)
 				GamingChair:Clean(flyingsound)
 				chairanim = {Stop = function() end}
 				local oldmoving = false
 				local oldflying = false
-	
 				repeat
 					if entitylib.isAlive and entitylib.character.Humanoid.Health > 0 then
 						if not chairanim.IsPlaying then
@@ -4650,7 +4667,6 @@ run(function()
 							chairanim.Looped = true
 							chairanim:Play()
 						end
-	
 						chair.CFrame = entitylib.character.RootPart.CFrame * CFrame.Angles(0, math.rad(-90), 0)
 						chairweld.Part1 = entitylib.character.RootPart
 						chairlegs.Velocity = Vector3.zero
@@ -4667,7 +4683,6 @@ run(function()
 							v.Enabled = not flying and moving
 							v.Color = ColorSequence.new(movingsound.PlaybackSpeed > 1.5 and Color3.new(1, 0.5, 0) or Color3.new())
 						end
-	
 						if moving ~= oldmoving then
 							if movingsound.IsPlaying then
 								if not moving then
@@ -4680,7 +4695,6 @@ run(function()
 							end
 							oldmoving = moving
 						end
-	
 						if flying ~= oldflying then
 							if flying then
 								if movingsound.IsPlaying then
@@ -4710,19 +4724,13 @@ run(function()
 								if flyingsound.IsPlaying then
 									flyingsound:Stop()
 								end
-	
 								if not movingsound.IsPlaying and moving then
 									movingsound:Play()
 								end
-	
-								if currenttween then
-									currenttween:Cancel()
-								end
-	
+								if currenttween then currenttween:Cancel() end
 								tween = tweenService:Create(chairfan, TweenInfo.new(0.15), {
 									Size = Vector3.zero
 								})
-	
 								tween.Completed:Connect(function(state)
 									if state == Enum.PlaybackState.Completed then
 										chairfan.Transparency = 1
@@ -4733,27 +4741,20 @@ run(function()
 										tween:Play()
 									end
 								end)
-	
 								tween:Play()
 							end
-	
 							oldflying = flying
 						end
 					else
 						chair.Anchored = true
 						chairlegs.Anchored = true
 						chairfan.Anchored = true
-	
-						repeat
-							task.wait()
-						until entitylib.isAlive and entitylib.character.Humanoid.Health > 0
-	
+						repeat task.wait() until entitylib.isAlive and entitylib.character.Humanoid.Health > 0
 						chair.Anchored = false
 						chairlegs.Anchored = false
 						chairfan.Anchored = false
 						chairanim:Stop()
 					end
-	
 					task.wait()
 				until not GamingChair.Enabled
 			else
@@ -4846,7 +4847,7 @@ run(function()
 			local nametag = Instance.new('TextLabel')
 			nametag.TextSize = 14 * Scale.Value
 			nametag.FontFace = FontOption.Value
-			local size = getfontbounds(removeTags(Strings[ent]), nametag.TextSize, nametag.FontFace, Vector2.new(100000, 100000))
+			local size = getfontsize(removeTags(Strings[ent]), nametag.TextSize, nametag.FontFace, Vector2.new(100000, 100000))
 			nametag.Name = ent.Player and ent.Player.Name or ent.Character.Name
 			nametag.Size = UDim2.fromOffset(size.X + 8, size.Y + 7)
 			nametag.AnchorPoint = Vector2.new(0.5, 1)
@@ -4944,7 +4945,7 @@ run(function()
 					Strings[ent] = '<font color="rgb(85, 255, 85)">[</font><font color="rgb(255, 255, 255)">%s</font><font color="rgb(85, 255, 85)">]</font> '..Strings[ent]
 				end
 	
-				local size = getfontbounds(removeTags(Strings[ent]), nametag.TextSize, nametag.FontFace, Vector2.new(100000, 100000))
+				local size = getfontsize(removeTags(Strings[ent]), nametag.TextSize, nametag.FontFace, Vector2.new(100000, 100000))
 				nametag.Size = UDim2.fromOffset(size.X + 8, size.Y + 7)
 				nametag.Text = Strings[ent]
 			end
@@ -5011,7 +5012,7 @@ run(function()
 					local mag = entitylib.isAlive and math.floor((entitylib.character.RootPart.Position - ent.RootPart.Position).Magnitude) or 0
 					if Sizes[ent] ~= mag then
 						nametag.Text = string.format(Strings[ent], mag)
-						local ize = getfontbounds(removeTags(nametag.Text), nametag.TextSize, nametag.FontFace, Vector2.new(100000, 100000))
+						local ize = getfontsize(removeTags(nametag.Text), nametag.TextSize, nametag.FontFace, Vector2.new(100000, 100000))
 						nametag.Size = UDim2.fromOffset(ize.X + 8, ize.Y + 7)
 						Sizes[ent] = mag
 					end
@@ -5395,7 +5396,7 @@ run(function()
 	
 	Radar = vape:CreateOverlay({
 		Name = 'Radar',
-		Icon = getvapeasset('newvape/assets/new/radar.png'),
+		Icon = getcustomasset('newvape/assets/new/radaricon.png'),
 		Size = UDim2.fromOffset(14, 14),
 		Position = UDim2.fromOffset(12, 13),
 		Function = function(callback)
@@ -5616,7 +5617,7 @@ run(function()
 	
 	SessionInfo = vape:CreateOverlay({
 		Name = 'Session Info',
-		Icon = getvapeasset('newvape/assets/new/textgui.png'),
+		Icon = getcustomasset('newvape/assets/new/textguiicon.png'),
 		Size = UDim2.fromOffset(16, 12),
 		Position = UDim2.fromOffset(12, 14),
 		Function = function(callback)
@@ -5670,7 +5671,7 @@ run(function()
 						infolabel.Text = table.concat(stuff, '\n')
 						infolabel.FontFace = FontOption.Value
 						infolabel.TextSize = TextSize.Value
-						local size = getfontbounds(removeTags(infolabel.Text), infolabel.TextSize, infolabel.FontFace)
+						local size = getfontsize(removeTags(infolabel.Text), infolabel.TextSize, infolabel.FontFace)
 						infoholder.Size = UDim2.fromOffset(size.X + 16, size.Y + (Title.Enabled and TitleOffset.Enabled and 4 or 16))
 					end
 	
@@ -5686,6 +5687,9 @@ run(function()
 	Hide = SessionInfo:CreateTextList({
 		Name = 'Blacklist',
 		Tooltip = 'Name of entry to hide.',
+		Icon = getcustomasset('newvape/assets/new/blockedicon.png'),
+		Tab = getcustomasset('newvape/assets/new/blockedtab.png'),
+		TabSize = UDim2.fromOffset(21, 16),
 		Color = Color3.fromRGB(250, 50, 56)
 	})
 	SessionInfo:CreateColorSlider({
@@ -6014,7 +6018,7 @@ run(function()
 			if callback then
 				for _, v in List.ListEnabled do
 					local split = v:split('/')
-					local tagSize = getfontbounds(removeTags(split[2]), 14 * Scale.Value, FontOption.Value, Vector2.new(100000, 100000))
+					local tagSize = getfontsize(removeTags(split[2]), 14 * Scale.Value, FontOption.Value, Vector2.new(100000, 100000))
 					local billboard = Instance.new('BillboardGui')
 					billboard.Size = UDim2.fromOffset(tagSize.X + 8, tagSize.Y + 7)
 					billboard.StudsOffsetWorldSpace = Vector3.new(unpack(split[1]:split(',')))
@@ -6318,7 +6322,6 @@ run(function()
 	local Mode
 	local Delay
 	local Hide
-	local RandomList = {}
 	local oldchat
 	
 	ChatSpammer = vape.Categories.Utility:CreateModule({
@@ -6327,8 +6330,8 @@ run(function()
 			if callback then
 				if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
 					if Hide.Enabled and coreGui:FindFirstChild('ExperienceChat') then
-						ChatSpammer:Clean(coreGui.ExperienceChat.appLayout.chatWindow.contentFrame.scrollingView.bottomLockedScrollView.scrollView.ChildAdded:Connect(function(msg)
-							if msg.Name:sub(1, 2) == '0-' and msg.TextMessage.BodyText.Text == '<font color="#d4d4d4">You must wait before sending another message.</font>' then
+						ChatSpammer:Clean(coreGui.ExperienceChat:FindFirstChild('RCTScrollContentView', true).ChildAdded:Connect(function(msg)
+							if msg.Name:sub(1, 2) == '0-' and msg.ContentText == 'You must wait before sending another message.' then
 								msg.Visible = false
 							end
 						end))
@@ -6345,23 +6348,13 @@ run(function()
 					ChatSpammer:Toggle()
 					return
 				end
-	
-				local index = 1
+				
+				local ind = 1
 				repeat
-					local message = 'vxpe on top'
-					if #Lines.ListEnabled > 0 then
-						if Mode.Value == 'Order' then
-							message = Lines.ListEnabled[index] or Lines.ListEnabled[1]
-							index = (index % #Lines.ListEnabled) + 1
-						else
-							if #RandomList <= 0 then
-								RandomList = table.clone(Lines.ListEnabled)
-							end
-	
-							local entry = Random.new():NextInteger(1, #RandomList)
-							message = RandomList[entry]
-							table.remove(RandomList, entry)
-						end
+					local message = (#Lines.ListEnabled > 0 and Lines.ListEnabled[math.random(1, #Lines.ListEnabled)] or 'vxpe on top')
+					if Mode.Value == 'Order' and #Lines.ListEnabled > 0 then
+						message = Lines.ListEnabled[ind] or Lines.ListEnabled[1]
+						ind = (ind % #Lines.ListEnabled) + 1
 					end
 	
 					if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
@@ -6380,12 +6373,7 @@ run(function()
 		end,
 		Tooltip = 'Automatically types in chat'
 	})
-	Lines = ChatSpammer:CreateTextList({
-		Name = 'Lines',
-		Function = function()
-			table.clear(RandomList)
-		end
-	})
+	Lines = ChatSpammer:CreateTextList({Name = 'Lines'})
 	Mode = ChatSpammer:CreateDropdown({
 		Name = 'Mode',
 		List = {'Random', 'Order'}
@@ -6713,89 +6701,6 @@ run(function()
 end)
 
 run(function()
-	local FastProxPrompt
-	local Mode
-	local Value
-	local modified = {}
-	local thread
-	
-	FastProxPrompt = vape.Categories.World:CreateModule({
-		Name = 'FastProxPrompt',
-		Function = function(callback)
-			if callback then
-				if Mode.Value == 'Signal' then
-					FastProxPrompt:Clean(proxService.PromptButtonHoldBegan:Connect(function(prompt, plr)
-						if plr == lplr then
-							thread = task.delay(prompt.HoldDuration * (Value.Value / 100), function()
-								fireproximityprompt(prompt)
-								thread = nil
-							end)
-						end
-					end))
-	
-					FastProxPrompt:Clean(proxService.PromptButtonHoldEnded:Connect(function(prompt, plr)
-						if plr == lplr and thread then
-							task.cancel(thread)
-							thread = nil
-						end
-					end))
-				else
-					FastProxPrompt:Clean(proxService.PromptShown:Connect(function(prompt)
-						if not modified[prompt] then
-							modified[prompt] = prompt.HoldDuration
-						end
-	
-						prompt.HoldDuration = modified[prompt] * (Value.Value / 100)
-					end))
-	
-					FastProxPrompt:Clean(proxService.PromptHidden:Connect(function(prompt)
-						if modified[prompt] then
-							prompt.HoldDuration = modified[prompt]
-							modified[prompt] = nil
-						end
-					end))
-				end
-			else
-				if thread then
-					task.cancel(thread)
-					thread = nil
-				end
-	
-				for i, v in modified do
-					i.HoldDuration = v
-				end
-	
-				table.clear(modified)
-			end
-		end,
-		Tooltip = 'Allow you to adjust the HoldDuration time of a ProximityPrompt'
-	})
-	Mode = FastProxPrompt:CreateDropdown({
-		Name = 'Mode',
-		List = {'Signal', 'Property'},
-		Tooltip = 'Signal - Uses fireproximityprompt after the calculated delay\nProperty - Sets the HoldDuration property',
-		Function = function()
-			if FastProxPrompt.Enabled then
-				FastProxPrompt:Toggle()
-				FastProxPrompt:Toggle()
-			end
-		end
-	})
-	Value = FastProxPrompt:CreateSlider({
-		Name = 'Modifier',
-		Min = 0,
-		Max = 100,
-		Default = 50,
-		Suffix = '%',
-		Function = function(val)
-			for i, v in modified do
-				i.HoldDuration = v * (val / 100)
-			end
-		end
-	})
-end)
-
-run(function()
 	local Freecam
 	local Value
 	local randomkey, module, old = httpService:GenerateGUID(false)
@@ -6929,85 +6834,6 @@ run(function()
 end)
 
 run(function()
-	local MurderMystery
-	local murderer, sheriff, oldtargetable, oldgetcolor
-	
-	local function itemAdded(v, plr)
-		if v:IsA('Tool') then
-			local check = v:FindFirstChild('IsGun') and 'sheriff' or v:FindFirstChild('KnifeServer') and 'murderer' or nil
-			check = check or v.Name:lower():find('knife') and 'murderer' or v.Name:lower():find('gun') and 'sheriff' or nil
-	
-			if check == 'murderer' and plr ~= murderer then
-				murderer = plr
-				if plr.Character then
-					entitylib.refresh()
-				end
-			elseif check == 'sheriff' and plr ~= sheriff then
-				sheriff = plr
-				if plr.Character then
-					entitylib.refresh()
-				end
-			end
-		end
-	end
-	
-	local function playerAdded(plr)
-		MurderMystery:Clean(plr.DescendantAdded:Connect(function(v)
-			itemAdded(v, plr)
-		end))
-	
-		local pack = plr:FindFirstChildWhichIsA('Backpack')
-		if pack then
-			for _, v in pack:GetChildren() do
-				itemAdded(v, plr)
-			end
-		end
-	
-		if plr.Character then
-			for _, v in plr.Character:GetChildren() do
-				itemAdded(v, plr)
-			end
-		end
-	end
-	
-	MurderMystery = vape.Categories.World:CreateModule({
-		Name = 'MurderMystery',
-		Function = function(callback)
-			if callback then
-				oldtargetable, oldgetcolor = entitylib.targetCheck, entitylib.getEntityColor
-	
-				entitylib.getEntityColor = function(ent)
-					ent = ent.Player
-					if not (ent and vape.Settings.Modules.Options['Use team color'].Enabled) then return end
-					if isFriend(ent, true) then
-						return Color3.fromHSV(vape.Categories.Friends.Options['Friends color'].Hue, vape.Categories.Friends.Options['Friends color'].Sat, vape.Categories.Friends.Options['Friends color'].Value)
-					end
-					return murderer == ent and Color3.new(1, 0.3, 0.3) or sheriff == ent and Color3.new(0, 0.5, 1) or nil
-				end
-	
-				entitylib.targetCheck = function(ent)
-					if ent.Player and isFriend(ent.Player) then return false end
-					if murderer == lplr then return true end
-					return murderer == ent.Player or sheriff == ent.Player
-				end
-	
-				for _, v in playersService:GetPlayers() do
-					playerAdded(v)
-				end
-	
-				MurderMystery:Clean(playersService.PlayerAdded:Connect(playerAdded))
-				entitylib.refresh()
-			else
-				entitylib.getEntityColor = oldgetcolor
-				entitylib.targetCheck = oldtargetable
-				entitylib.refresh()
-			end
-		end,
-		Tooltip = 'Automatic murder mystery teaming based on equipped roblox tools.'
-	})
-end)
-
-run(function()
 	local Parkour
 	
 	Parkour = vape.Categories.World:CreateModule({
@@ -7074,75 +6900,6 @@ run(function()
 end)
 
 run(function()
-	local Wallhop
-	local Offset
-	local params = OverlapParams.new()
-	params.RespectCanCollide = true
-	local oldvec
-	local timeout = os.clock()
-	local set
-	
-	local function doCheck()
-		if set then
-			gameCamera.CFrame = CFrame.new(gameCamera.CFrame.Position.X, gameCamera.CFrame.Position.Y, gameCamera.CFrame.Position.Z, unpack(set, 4, set.n))
-			set = nil
-		end
-	
-		local hum = entitylib.isAlive and entitylib.character.Humanoid
-		if hum and hum.Jump and hum.MoveDirection.Magnitude > 0 then
-			local root = entitylib.character.RootPart
-			params.CollisionGroup = root.CollisionGroup
-			params.FilterDescendantsInstances = {lplr.Character}
-	
-			if root.AssemblyLinearVelocity.Y < 0 and hum.FloorMaterial == Enum.Material.Air then
-				local feet = root.Position
-				local parts = workspace:GetPartBoundsInBox(CFrame.new(root.Position - Vector3.new(0, entitylib.character.HipHeight / 2, 0)), Vector3.new(3, entitylib.character.HipHeight, 3), params)
-				local doHop = false
-	
-				for _, v in parts do
-					local pos = v:GetClosestPointOnSurface(root.Position)
-					local diff = (root.Position.Y - pos.Y)
-	
-					if diff > root.Size.Y / 2 then
-						doHop = true
-						break
-					end
-				end
-	
-				if doHop and (os.clock() - timeout) > 0.2 then
-					set = table.pack(gameCamera.CFrame:GetComponents())
-					gameCamera.CFrame *= CFrame.Angles(0, math.rad(Offset.Value), 0)
-					timeout = os.clock()
-				end
-			end
-		end
-	end
-	
-	Wallhop = vape.Categories.World:CreateModule({
-		Name = 'Wallhop',
-		Function = function(callback)
-			if callback then
-				if workspace.AuthorityMode == Enum.AuthorityMode.Server then
-					Wallhop:Clean(runService:BindToSimulation(doCheck))
-				else
-					Wallhop:Clean(runService.RenderStepped:Connect(doCheck))
-				end
-			else
-				set = nil
-			end
-		end,
-		Tooltip = 'Automatically rotates camera for wallhopping.'
-	})
-	Offset = Wallhop:CreateSlider({
-		Name = 'Offset',
-		Min = -45,
-		Max = 45,
-		Default = 45,
-		Suffix = 'degrees'
-	})
-end)
-
-run(function()
 	local Xray
 	local List
 	local modified = {}
@@ -7179,6 +6936,85 @@ run(function()
 				Xray:Toggle()
 			end
 		end
+	})
+end)
+
+run(function()
+	local MurderMystery
+	local murderer, sheriff, oldtargetable, oldgetcolor
+	
+	local function itemAdded(v, plr)
+		if v:IsA('Tool') then
+			local check = v:FindFirstChild('IsGun') and 'sheriff' or v:FindFirstChild('KnifeServer') and 'murderer' or nil
+			check = check or v.Name:lower():find('knife') and 'murderer' or v.Name:lower():find('gun') and 'sheriff' or nil
+	
+			if check == 'murderer' and plr ~= murderer then
+				murderer = plr
+				if plr.Character then
+					entitylib.refresh()
+				end
+			elseif check == 'sheriff' and plr ~= sheriff then
+				sheriff = plr
+				if plr.Character then
+					entitylib.refresh()
+				end
+			end
+		end
+	end
+	
+	local function playerAdded(plr)
+		MurderMystery:Clean(plr.DescendantAdded:Connect(function(v)
+			itemAdded(v, plr)
+		end))
+	
+		local pack = plr:FindFirstChildWhichIsA('Backpack')
+		if pack then
+			for _, v in pack:GetChildren() do
+				itemAdded(v, plr)
+			end
+		end
+	
+		if plr.Character then
+			for _, v in plr.Character:GetChildren() do
+				itemAdded(v, plr)
+			end
+		end
+	end
+	
+	MurderMystery = vape.Categories.Minigames:CreateModule({
+		Name = 'MurderMystery',
+		Function = function(callback)
+			if callback then
+				oldtargetable, oldgetcolor = entitylib.targetCheck, entitylib.getEntityColor
+	
+				entitylib.getEntityColor = function(ent)
+					ent = ent.Player
+					if not (ent and vape.Categories.Main.Options['Use team color'].Enabled) then return end
+					if isFriend(ent, true) then
+						return Color3.fromHSV(vape.Categories.Friends.Options['Friends color'].Hue, vape.Categories.Friends.Options['Friends color'].Sat, vape.Categories.Friends.Options['Friends color'].Value)
+					end
+					return murderer == ent and Color3.new(1, 0.3, 0.3) or sheriff == ent and Color3.new(0, 0.5, 1) or nil
+				end
+	
+				entitylib.targetCheck = function(ent)
+					if ent.Player and isFriend(ent.Player) then return false end
+					if murderer == lplr then return true end
+					return murderer == ent.Player or sheriff == ent.Player
+				end
+	
+				for _, v in playersService:GetPlayers() do
+					playerAdded(v)
+				end
+	
+				MurderMystery:Clean(playersService.PlayerAdded:Connect(playerAdded))
+				entitylib.refresh()
+			else
+				entitylib.getEntityColor = oldgetcolor
+				entitylib.targetCheck = oldtargetable
+				entitylib.refresh()
+			end
+		end,
+		Tooltip = 'Automatic murder mystery teaming based on equipped roblox tools.'
 	})
 end)
 
@@ -7488,7 +7324,7 @@ run(function()
 					decal:Play()
 				else
 					local decal = Instance.new('ImageLabel')
-					decal.Image = Texture.Value ~= '' and (Texture.Value:find('rbxasset') and Texture.Value or getcustomasset(Texture.Value)) or 'rbxassetid://14637958134'
+					decal.Image = Texture.Value ~= '' and (Texture.Value:find('rbxasset') and Texture.Value or assetfunction(Texture.Value)) or 'rbxassetid://14637958134'
 					decal.Size = UDim2.fromScale(1, 1)
 					decal.BackgroundTransparency = 1
 					decal.Parent = capesurface
@@ -7658,107 +7494,146 @@ run(function()
 	local Disguise
 	local Mode
 	local IDBox
-	local cloned = {}
+	local desc
 	
-	local function itemAdded(obj, manual)
-		if (obj:IsA('Accessory') or obj:IsA('ShirtGraphic') or obj:IsA('Shirt') or obj:IsA('Pants') or obj:IsA('BodyColors') or manual) and not cloned[obj] then
-			obj:ClearAllChildren()
-			task.defer(obj.Destroy, obj)
+	local function itemAdded(v, manual)
+		if (not v:GetAttribute('Disguise')) and ((v:IsA('Accessory') and (not v:GetAttribute('InvItem')) and (not v:GetAttribute('ArmorSlot'))) or v:IsA('ShirtGraphic') or v:IsA('Shirt') or v:IsA('Pants') or v:IsA('BodyColors') or manual) then
+			repeat
+				task.wait()
+				v.Parent = game
+			until v.Parent == game
+	
+			v:ClearAllChildren()
+			v:Destroy()
 		end
 	end
 	
-	local function localAdded(char)
-		table.clear(cloned)
+	local function characterAdded(char)
 		if Mode.Value == 'Character' then
-			local success, description = pcall(function()
-				return playersService:GetHumanoidDescriptionFromUserId(IDBox.Value == '' and 239702688 or tonumber(IDBox.Value))
-			end)
+			task.wait(0.1)
+			char.Character.Archivable = true
 	
-			if success and Disguise.Enabled then
-				char.Character.Archivable = true
-				local clone = char.Character:Clone()
-				clone.Parent = game
+			local clone = char.Character:Clone()
+			repeat
+				if pcall(function()
+					desc = playersService:GetHumanoidDescriptionFromUserId(IDBox.Value == '' and 239702688 or tonumber(IDBox.Value))
+				end) and desc then break end
+				task.wait(1)
+			until not Disguise.Enabled
 	
-				local original = char.Humanoid:WaitForChild('HumanoidDescription', 2) or {
-					HeightScale = 1,
-					SetEmotes = function() end,
-					SetEquippedEmotes = function() end
-				}
-	
-				original.JumpAnimation = description.JumpAnimation
-				description.HeightScale = original.HeightScale
-				clone:FindFirstChildWhichIsA('Humanoid'):ApplyDescriptionResetAsync(description)
-	
-				Disguise:Clean(char.Character.ChildAdded:Connect(itemAdded))
-				for _, obj in char.Character:GetChildren() do
-					itemAdded(obj)
-				end
-	
-				for _, obj in clone:GetChildren() do
-					cloned[obj] = true
-					if obj:IsA('Accessory') then
-						for _, objd in obj:GetDescendants() do
-							if objd:IsA('Weld') and objd.Part1 then
-								objd.Part1 = char.Character:FindFirstChild(objd.Part1.Name)
-							elseif objd:IsA('RigidConstraint') then
-								objd.Attachment1 = char.Character:FindFirstChild(objd.Attachment1.Name, true)
-							end
-						end
-	
-						obj.Parent = char.Character
-					elseif obj:IsA('ShirtGraphic') or obj:IsA('Shirt') or obj:IsA('Pants') or obj:IsA('BodyColors') then
-						obj.Parent = char.Character
-					elseif obj.Name == 'Head' and char.Head:IsA('MeshPart') and (not char.Head:FindFirstChild('FaceControls')) then
-						char.Head.MeshId = obj.MeshId
-					end
-				end
-	
-				local face = char.Character:FindFirstChild('face', true)
-				local cface = clone:FindFirstChild('face', true)
-	
-				if face then
-					itemAdded(face, true)
-				end
-	
-				if cface then
-					cface.Parent = char.Head
-				end
-	
-				original:SetEmotes(description:GetEmotes())
-				original:SetEquippedEmotes(description:GetEquippedEmotes())
-				description:Destroy()
+			if not Disguise.Enabled then
 				clone:ClearAllChildren()
 				clone:Destroy()
-			elseif description then
-				description:Destroy()
+				clone = nil
+				if desc then
+					desc:Destroy()
+					desc = nil
+				end
+				return
 			end
-		else
-			local success, data = pcall(function()
-				data = marketplaceService:GetProductInfo(IDBox.Value == '' and 43 or tonumber(IDBox.Value), Enum.InfoType.Bundle)
-			end)
 	
-			if success and Disguise.Enabled then
-				if data.BundleType == 'AvatarAnimations' then
-					local animate = char.Character:FindFirstChild('Animate')
-					if not animate then return end
+			clone.Parent = game
 	
-					for _, item in desc.Items do
-						local itemtype = item.Name:split(' ')[2]:lower()
-						if itemtype ~= 'animation' then
-							local suc, obj = pcall(function()
-								return game:GetObjects('rbxassetid://'..item.Id)
-							end)
+			local originalDesc = char.Humanoid:WaitForChild('HumanoidDescription', 2) or {
+				HeightScale = 1,
+				SetEmotes = function() end,
+				SetEquippedEmotes = function() end
+			}
+			originalDesc.JumpAnimation = desc.JumpAnimation
+			desc.HeightScale = originalDesc.HeightScale
 	
-							if suc then
-								animate[itemtype]:FindFirstChildWhichIsA('Animation').AnimationId = obj[1]:FindFirstChildWhichIsA('Animation', true).AnimationId
-							end
+			for _, v in clone:GetChildren() do
+				if v:IsA('Accessory') or v:IsA('ShirtGraphic') or v:IsA('Shirt') or v:IsA('Pants') then
+					v:ClearAllChildren()
+					v:Destroy()
+				end
+			end
+	
+			clone.Humanoid:ApplyDescriptionClientServer(desc)
+			for _, v in char.Character:GetChildren() do
+				itemAdded(v)
+			end
+			Disguise:Clean(char.Character.ChildAdded:Connect(itemAdded))
+	
+			for _, v in clone:WaitForChild('Animate'):GetChildren() do
+				if not char.Character:FindFirstChild('Animate') then return end
+				local real = char.Character.Animate:FindFirstChild(v.Name)
+				if v and real then
+					local anim = v:FindFirstChildWhichIsA('Animation') or {AnimationId = ''}
+					local realanim = real:FindFirstChildWhichIsA('Animation') or {AnimationId = ''}
+					if realanim then
+						realanim.AnimationId = anim.AnimationId
+					end
+				end
+			end
+	
+			for _, v in clone:GetChildren() do
+				v:SetAttribute('Disguise', true)
+				if v:IsA('Accessory') then
+					for _, v2 in v:GetDescendants() do
+						if v2:IsA('Weld') and v2.Part1 then
+							v2.Part1 = char.Character[v2.Part1.Name]
 						end
 					end
-				else
-					notif('Disguise', 'that\'s not an animation pack', 5, 'warning')
+					v.Parent = char.Character
+				elseif v:IsA('ShirtGraphic') or v:IsA('Shirt') or v:IsA('Pants') or v:IsA('BodyColors') then
+					v.Parent = char.Character
+				elseif v.Name == 'Head' and char.Head:IsA('MeshPart') and (not char.Head:FindFirstChild('FaceControls')) then
+					char.Head.MeshId = v.MeshId
 				end
-			elseif type(data) == 'table' then
-				table.clear(data)
+			end
+	
+			local localface = char.Character:FindFirstChild('face', true)
+			local cloneface = clone:FindFirstChild('face', true)
+			if localface and cloneface then
+				itemAdded(localface, true)
+				cloneface.Parent = char.Head
+			end
+			originalDesc:SetEmotes(desc:GetEmotes())
+			originalDesc:SetEquippedEmotes(desc:GetEquippedEmotes())
+			clone:ClearAllChildren()
+			clone:Destroy()
+			clone = nil
+	
+			if desc then
+				desc:Destroy()
+				desc = nil
+			end
+		else
+			local data
+			repeat
+				if pcall(function()
+					data = marketplaceService:GetProductInfo(IDBox.Value == '' and 43 or tonumber(IDBox.Value), Enum.InfoType.Bundle)
+				end) then break end
+				task.wait(1)
+			until not Disguise.Enabled
+	
+			if not Disguise.Enabled then
+				if data then
+					table.clear(data)
+					data = nil
+				end
+				return
+			end
+	
+			if data.BundleType == 'AvatarAnimations' then
+				local animate = char.Character:FindFirstChild('Animate')
+				if not animate then return end
+	
+				for _, v in desc.Items do
+					local animtype = v.Name:split(' ')[2]:lower()
+					if animtype ~= 'animation' then
+						local suc, res = pcall(function()
+							return game:GetObjects('rbxassetid://'..v.Id)
+						end)
+	
+						if suc then
+							animate[animtype]:FindFirstChildWhichIsA('Animation').AnimationId = res[1]:FindFirstChildWhichIsA('Animation', true).AnimationId
+						end
+					end
+				end
+			else
+				notif('Disguise', 'that\'s not an animation pack', 5, 'warning')
 			end
 		end
 	end
@@ -7767,12 +7642,10 @@ run(function()
 		Name = 'Disguise',
 		Function = function(callback)
 			if callback then
-				Disguise:Clean(entitylib.Events.LocalAdded:Connect(localAdded))
+				Disguise:Clean(entitylib.Events.LocalAdded:Connect(characterAdded))
 				if entitylib.isAlive then
-					task.spawn(localAdded, entitylib.character)
+					characterAdded(entitylib.character)
 				end
-			else
-				table.clear(cloned)
 			end
 		end,
 		Tooltip = 'Changes your character or animation to a specific ID (animation packs or userid\'s only)'
@@ -8019,7 +7892,7 @@ run(function()
 		Function = function(callback)
 			if callback then
 				repeat
-					label.Text = math.floor(tonumber(stats.PerformanceStats.Memory:GetValue()))..' MB'
+					label.Text = math.floor(tonumber(game:GetService('Stats'):FindFirstChild('PerformanceStats').Memory:GetValue()))..' MB'
 					task.wait(1)
 				until not Memory.Enabled
 			end
@@ -8066,7 +7939,7 @@ run(function()
 		Function = function(callback)
 			if callback then
 				repeat
-					label.Text = math.floor(tonumber(stats.PerformanceStats.Ping:GetValue()))..' ms'
+					label.Text = math.floor(tonumber(game:GetService('Stats'):FindFirstChild('PerformanceStats').Ping:GetValue()))..' ms'
 					task.wait(1)
 				until not Ping.Enabled
 			end
@@ -8111,7 +7984,7 @@ run(function()
 	local FOVValue = {}
 	local Volume
 	local alreadypicked = {}
-	local beattick = os.clock()
+	local beattick = tick()
 	local oldfov, songobj, songbpm, songtween
 	
 	local function choosesong()
@@ -8142,13 +8015,13 @@ run(function()
 			return
 		end
 	
-		songobj.SoundId = getcustomasset(split[1])
+		songobj.SoundId = assetfunction(split[1])
 		repeat
 			task.wait()
 		until songobj.IsLoaded or not SongBeats.Enabled
 	
 		if SongBeats.Enabled then
-			beattick = os.clock() + (tonumber(split[3]) or 0)
+			beattick = tick() + (tonumber(split[3]) or 0)
 			songbpm = 60 / (tonumber(split[2]) or 50)
 			songobj:Play()
 		end
@@ -8161,7 +8034,6 @@ run(function()
 				songobj = Instance.new('Sound')
 				songobj.Volume = Volume.Value / 100
 				songobj.Parent = workspace
-				SongBeats:Clean(songobj)
 				oldfov = gameCamera.FieldOfView
 	
 				repeat
@@ -8169,23 +8041,22 @@ run(function()
 						choosesong()
 					end
 	
-					if beattick < os.clock() and SongBeats.Enabled and FOV.Enabled then
-						beattick = os.clock() + songbpm
-						if songtween then
-							songtween:Cancel()
-						end
-	
+					if beattick < tick() and SongBeats.Enabled and FOV.Enabled then
+						beattick = tick() + songbpm
 						gameCamera.FieldOfView = oldfov - FOVValue.Value
 						songtween = tweenService:Create(gameCamera, TweenInfo.new(math.min(songbpm, 0.2), Enum.EasingStyle.Linear), {
 							FieldOfView = oldfov
 						})
-	
 						songtween:Play()
 					end
 	
 					task.wait()
 				until not SongBeats.Enabled
 			else
+				if songobj then
+					songobj:Destroy()
+				end
+	
 				if songtween then
 					songtween:Cancel()
 				end
@@ -8311,7 +8182,7 @@ run(function()
 		Max = 24,
 		Default = 12,
 		Function = function(val)
-			if TimeChanger.Enabled then
+			if TimeChanger.Enabled then 
 				lightingService.TimeOfDay = val..':00:00'
 			end
 		end
